@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Kebun IoT — Config</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0e150f;color:#dde5da;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{background:#1a211b;border:1px solid #3d4a3e;border-radius:12px;padding:32px;width:100%;max-width:480px}
+h1{color:#6bfb9a;font-size:24px;margin-bottom:4px}
+p.sub{color:#869486;font-size:14px;margin-bottom:24px}
+label{display:block;font-size:12px;color:#bccabb;margin-bottom:4px;margin-top:16px}
+input{width:100%;padding:10px 12px;border:1px solid #3d4a3e;border-radius:8px;background:#242c25;color:#dde5da;font-size:14px;outline:none}
+input:focus{border-color:#6bfb9a}
+button{width:100%;padding:12px;margin-top:20px;background:#6bfb9a;color:#003919;border:none;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer}
+button:hover{opacity:.9}
+button:disabled{opacity:.5;cursor:not-allowed}
+.status{text-align:center;margin-top:16px;font-size:14px;padding:8px;border-radius:6px;display:none}
+.status.ok{display:block;background:#003919;color:#6bfb9a}
+.status.err{display:block;background:#93000a;color:#ffb4ab}
+.footer{text-align:center;margin-top:24px;font-size:12px;color:#869486}
+.info{background:#242c25;border-radius:8px;padding:12px;margin-top:16px;font-size:13px;line-height:1.6}
+.info span{color:#6bfb9a}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Kebun IoT</h1>
+  <p class="sub">Konfigurasi WiFi</p>
+
+  <label>Nama WiFi (SSID)</label>
+  <input id="ssid" type="text" placeholder="cth. rumah_123" autocomplete="off">
+
+  <label>Password WiFi</label>
+  <input id="pass" type="password" placeholder="Password">
+
+  <div class="info">
+    <strong>Mode:</strong> <span id="ap-name">Kebun-IoT-AP</span><br>
+    Setelah terhubung ke WiFi, ESP32 akan restart dan otomatis terhubung ke jaringan Anda.
+  </div>
+
+  <button id="btn" onclick="save()">Simpan & Hubungkan</button>
+  <div id="status" class="status"></div>
+
+  <div class="footer">Kebun IoT v2.0.0</div>
+</div>
+
+<script>
+async function save() {
+  const ssid = document.getElementById('ssid').value.trim();
+  const pass = document.getElementById('pass').value.trim();
+  const btn = document.getElementById('btn');
+  const st = document.getElementById('status');
+
+  if (!ssid) {
+    st.className = 'status err';
+    st.textContent = 'Nama WiFi wajib diisi';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Menyimpan...';
+  st.className = 'status';
+  st.textContent = '';
+
+  try {
+    const body = new URLSearchParams();
+    body.append('ssid', ssid);
+    body.append('password', pass);
+
+    const res = await fetch('/wifi', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString()
+    });
+
+    const data = await res.json();
+    if (data.ok) {
+      st.className = 'status ok';
+      st.textContent = 'Berhasil! ESP32 akan restart...';
+    } else {
+      throw new Error(data.error || 'Gagal');
+    }
+  } catch(e) {
+    // ESP32 will reboot after saving, so fetch will fail — this is expected
+    st.className = 'status ok';
+    st.textContent = 'Konfigurasi tersimpan. ESP32 restarting...';
+    setTimeout(() => {
+      document.body.innerHTML = '<div class="card" style="text-align:center"><h1>✓ Selesai</h1><p class="sub">ESP32 sedang restart. Hubungkan perangkat Anda ke WiFi "' + ssid + '" lalu buka dashboard.</p></div>';
+    }, 3000);
+  }
+}
+</script>
+</body>
+</html>

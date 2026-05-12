@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html class="dark" lang="id">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Kebun IoT — Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Geist:wght@400;600;700&family=JetBrains+Mono:wght@500;600&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "inverse-primary": "#006d36", "primary": "#6bfb9a", "secondary-fixed-dim": "#4ae176",
+                        "on-surface": "#dde5da", "on-primary-fixed-variant": "#005227", "tertiary-container": "#ffb47f",
+                        "on-error": "#690005", "outline-variant": "#3d4a3e", "tertiary-fixed-dim": "#ffb784",
+                        "on-secondary": "#003915", "surface": "#0e150f", "on-tertiary-fixed-variant": "#6c3a0f",
+                        "on-secondary-fixed-variant": "#005321", "on-primary-fixed": "#00210c", "tertiary": "#ffd9c1",
+                        "on-surface-variant": "#bccabb", "secondary-container": "#00b954", "surface-dim": "#0e150f",
+                        "background": "#0e150f", "inverse-surface": "#dde5da", "error-container": "#93000a",
+                        "on-background": "#dde5da", "on-primary": "#003919", "surface-container-low": "#161d17",
+                        "surface-container": "#1a211b", "surface-container-high": "#242c25", "on-secondary-container": "#004119",
+                        "on-tertiary-container": "#794418", "on-tertiary": "#4f2500", "surface-variant": "#2f372f",
+                        "primary-container": "#4ade80", "inverse-on-surface": "#2b322b", "on-tertiary-fixed": "#301400",
+                        "error": "#ffb4ab", "on-secondary-fixed": "#002109", "secondary": "#4ae176",
+                        "on-primary-container": "#005e2d", "surface-tint": "#4de082", "outline": "#869486",
+                        "on-error-container": "#ffdad6", "surface-bright": "#333b34", "secondary-fixed": "#6bff8f",
+                        "primary-fixed-dim": "#4de082", "primary-fixed": "#6dfe9c", "tertiary-fixed": "#ffdcc6",
+                        "surface-container-lowest": "#09100a", "surface-container-highest": "#2f372f"
+                    },
+                    borderRadius: { DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px" },
+                    spacing: { "container-max": "1280px", "gutter": "24px", "margin-mobile": "16px", "margin-desktop": "40px", "unit": "8px" },
+                    fontFamily: {
+                        "headline-lg": ["Geist"], "body-sm": ["Geist"], "headline-xl": ["Geist"],
+                        "body-md": ["Geist"], "headline-sm": ["Geist"], "data-display": ["JetBrains Mono"], "data-label": ["JetBrains Mono"]
+                    },
+                    fontSize: {
+                        "headline-lg": ["32px", { lineHeight: "1.3", letterSpacing: "-0.01em", fontWeight: "600" }],
+                        "body-sm": ["14px", { lineHeight: "1.5", fontWeight: "400" }],
+                        "headline-xl": ["40px", { lineHeight: "1.2", letterSpacing: "-0.02em", fontWeight: "700" }],
+                        "body-md": ["16px", { lineHeight: "1.6", fontWeight: "400" }],
+                        "headline-sm": ["20px", { lineHeight: "1.4", fontWeight: "600" }],
+                        "data-display": ["24px", { lineHeight: "1.2", fontWeight: "500" }],
+                        "data-label": ["12px", { lineHeight: "1.0", letterSpacing: "0.05em", fontWeight: "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .pulse-dot {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: .5
+            }
+        }
+
+        .card-fadein {
+            opacity: 0;
+            transform: translateY(16px);
+            animation: fadeUp 0.4s ease forwards;
+        }
+
+        @keyframes fadeUp {
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .moisture-bar {
+            transition: width 600ms ease;
+        }
+
+        .toggle-knob {
+            transition: transform 200ms ease;
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, #1a211b 25%, #242c25 50%, #1a211b 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 200% 0
+            }
+
+            100% {
+                background-position: -200% 0
+            }
+        }
+
+        .spin {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        .slide-enter {
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-8px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0e150f;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #3d4a3e;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-background text-on-surface font-body-md antialiased pb-24 md:pb-8 flex min-h-screen w-full overflow-x-hidden overflow-y-auto">
+
+    <!-- Error Banner -->
+    <div id="error-banner"
+        class="fixed top-0 left-0 w-full z-[100] bg-error-container text-on-error-container px-4 py-3 text-center font-body-sm hidden slide-enter">
+        <span id="error-banner-text">Tidak dapat terhubung ke ESP32 — menampilkan data simulasi</span>
+        <button onclick="document.getElementById('error-banner').classList.add('hidden')"
+            class="ml-4 opacity-70 hover:opacity-100">✕</button>
+    </div>
+
+    <!-- Side NavBar (Desktop) -->
+    <nav
+        class="h-screen w-64 hidden lg:flex flex-col border-r border-outline-variant bg-surface-container-low fixed left-0 top-0 p-4 z-40">
+        <div class="mb-8">
+            <h1 class="font-headline-sm text-headline-sm font-bold text-primary">Kebun IoT</h1>
+            <p class="text-on-surface-variant font-body-sm text-body-sm">Greenhouse Alpha-1</p>
+        </div>
+        <div class="flex-1 flex flex-col gap-2">
+            <a id="nav-dashboard"
+                class="nav-link flex items-center gap-3 p-3 bg-secondary-container text-on-secondary-container rounded-xl font-semibold cursor-pointer"
+                href="#dashboard">
+                <span class="material-symbols-outlined">dashboard</span>Dashboard
+            </a>
+            <a id="nav-chart"
+                class="nav-link flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-variant rounded-xl transition-colors cursor-pointer"
+                href="#chart">
+                <span class="material-symbols-outlined">show_chart</span>Analytics
+            </a>
+            <a id="nav-log"
+                class="nav-link flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-variant rounded-xl transition-colors cursor-pointer"
+                href="#log">
+                <span class="material-symbols-outlined">database</span>Logs
+            </a>
+            <a id="nav-settings"
+                class="nav-link flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-variant rounded-xl transition-colors cursor-pointer"
+                href="#settings">
+                <span class="material-symbols-outlined">settings</span>Settings
+            </a>
+        </div>
+        <button onclick="EventManager.openModal()"
+            class="bg-primary text-on-primary font-headline-sm text-headline-sm rounded-lg p-3 hover:brightness-110 transition-all mb-4 flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined text-base">add</span>
+            Tambah Tanaman
+        </button>
+        <div class="flex flex-col gap-2 border-t border-outline-variant pt-4">
+            <div class="flex items-center gap-2 px-3 py-2">
+                <div id="side-status-dot" class="w-2 h-2 rounded-full bg-amber-400 pulse-dot"></div>
+                <span id="side-status-label"
+                    class="font-data-label text-data-label text-amber-400 uppercase">OFFLINE</span>
+            </div>
+            <span class="font-data-label text-data-label text-on-surface-variant px-3">Update: <span
+                    id="side-last-update">--:--:--</span></span>
+            <button id="side-refresh-btn" onclick="EventManager.manualRefresh()"
+                class="flex items-center gap-2 p-3 text-on-surface-variant hover:bg-surface-variant rounded-xl transition-colors">
+                <span id="side-refresh-icon" class="material-symbols-outlined text-sm">refresh</span>Refresh
+            </button>
+            <button onclick="UIManager.downloadCSV()"
+                class="flex items-center gap-2 p-3 text-on-surface-variant hover:bg-surface-variant rounded-xl transition-colors">
+                <span class="material-symbols-outlined text-sm">download</span>Export CSV
+            </button>
+        </div>
+    </nav>
+
+    <!-- Top NavBar (Mobile) -->
+    <nav
+        class="fixed top-0 w-full z-50 flex justify-between items-center px-4 py-4 bg-background/80 backdrop-blur-md border-b border-outline-variant lg:hidden">
+        <h1 class="font-headline-lg text-headline-lg font-bold text-primary tracking-tighter">Kebun IoT</h1>
+        <div class="flex items-center gap-2">
+            <div id="top-status-badge"
+                class="flex items-center gap-1.5 px-2 py-1 bg-surface-container-high rounded-full border border-outline-variant">
+                <div id="top-status-dot" class="w-1.5 h-1.5 rounded-full bg-amber-400 pulse-dot"></div>
+                <span id="top-status-label"
+                    class="font-data-label text-data-label text-amber-400 uppercase text-[10px]">OFFLINE</span>
+            </div>
+            <button id="top-refresh-btn" onclick="EventManager.manualRefresh()"
+                class="hover:bg-surface-container-high/50 rounded-lg transition-all p-2 flex items-center">
+                <span id="top-refresh-icon" class="material-symbols-outlined">refresh</span>
+            </button>
+            <button onclick="UIManager.downloadCSV()"
+                class="hover:bg-surface-container-high/50 rounded-lg transition-all p-2 flex items-center">
+                <span class="material-symbols-outlined">download</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Canvas -->
+    <main class="flex-1 min-w-0 w-full lg:ml-64 pt-20 lg:pt-8 px-4 md:px-10 lg:px-12">
+
+        <!-- DASHBOARD TAB -->
+        <div id="tab-dashboard" class="tab-content active">
+            <header class="flex justify-between items-center mb-6 py-4 border-b border-outline-variant">
+                <h2 class="font-headline-xl text-headline-xl text-on-surface">Dashboard</h2>
+                <div class="flex items-center gap-3">
+                    <span class="font-data-label text-data-label text-on-surface-variant">Update: <span
+                            id="dash-last-update">--:--:--</span></span>
+                    <button onclick="EventManager.openModal()"
+                        class="flex items-center gap-1.5 px-3 py-2 bg-primary text-on-primary rounded-lg font-body-sm font-semibold hover:brightness-110 transition-all">
+                        <span class="material-symbols-outlined text-sm">add</span>Tambah
+                    </button>
+                </div>
+            </header>
+
+            <!-- Summary Pills -->
+            <section class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <div
+                    class="bg-surface-container-low p-4 rounded-xl border border-outline-variant flex flex-col gap-1 hover:border-primary/30 transition-colors">
+                    <span class="font-body-sm text-body-sm text-on-surface-variant">Tanaman Aktif</span>
+                    <span id="pill-active" class="font-data-display text-data-display text-on-surface">3</span>
+                </div>
+                <div
+                    class="bg-surface-container-low p-4 rounded-xl border border-outline-variant flex flex-col gap-1 hover:border-primary/30 transition-colors">
+                    <span class="font-body-sm text-body-sm text-on-surface-variant">Perlu Disiram</span>
+                    <span id="pill-need-water" class="font-data-display text-data-display text-on-surface">0</span>
+                </div>
+                <div
+                    class="bg-surface-container-low p-4 rounded-xl border border-outline-variant flex flex-col gap-1 hover:border-primary/30 transition-colors">
+                    <span class="font-body-sm text-body-sm text-on-surface-variant">Pompa Nyala</span>
+                    <span id="pill-pumps-on" class="font-data-display text-data-display text-on-surface">0</span>
+                </div>
+                <div
+                    class="bg-surface-container-low p-4 rounded-xl border border-outline-variant flex flex-col gap-1 hover:border-primary/30 transition-colors">
+                    <span class="font-body-sm text-body-sm text-on-surface-variant">Total Siram Hari Ini</span>
+                    <span id="pill-total-water" class="font-data-display text-data-display text-on-surface">0</span>
+                </div>
+            </section>
+
+            <!-- Plant Cards -->
+            <section id="plant-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Skeleton placeholders -->
+                <div class="skeleton rounded-xl h-64"></div>
+                <div class="skeleton rounded-xl h-64"></div>
+                <div class="skeleton rounded-xl h-64"></div>
+            </section>
+        </div>
+
+        <!-- CHART TAB -->
+        <div id="tab-chart" class="tab-content">
+            <header class="flex justify-between items-center mb-6 py-4 border-b border-outline-variant">
+                <h2 class="font-headline-xl text-headline-xl text-on-surface">Analytics</h2>
+            </header>
+            <!-- Time range pills -->
+            <div class="flex gap-2 mb-6 flex-wrap">
+                <button data-range="30min"
+                    class="range-pill px-4 py-2 rounded-full font-data-label text-data-label bg-secondary-container text-on-secondary-container transition-all">30
+                    Menit</button>
+                <button data-range="1jam"
+                    class="range-pill px-4 py-2 rounded-full font-data-label text-data-label bg-surface-container-high text-on-surface-variant hover:bg-surface-variant transition-all">1
+                    Jam</button>
+                <button data-range="6jam"
+                    class="range-pill px-4 py-2 rounded-full font-data-label text-data-label bg-surface-container-high text-on-surface-variant hover:bg-surface-variant transition-all">6
+                    Jam</button>
+                <button data-range="24jam"
+                    class="range-pill px-4 py-2 rounded-full font-data-label text-data-label bg-surface-container-high text-on-surface-variant hover:bg-surface-variant transition-all">24
+                    Jam</button>
+            </div>
+            <!-- Chart -->
+            <div class="bg-surface-container rounded-xl border border-outline-variant p-6 mb-6">
+                <div style="position:relative;height:260px;">
+                    <canvas id="moisture-chart"></canvas>
+                </div>
+            </div>
+            <!-- Per-plant stat cards -->
+            <div id="chart-stats" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+        </div>
+
+        <!-- LOG TAB -->
+        <div id="tab-log" class="tab-content">
+            <header class="flex justify-between items-center mb-6 py-4 border-b border-outline-variant">
+                <h2 class="font-headline-xl text-headline-xl text-on-surface">Logs</h2>
+                <button id="log-csv-btn" onclick="UIManager.downloadCSV()"
+                    class="flex items-center gap-2 px-4 py-2 bg-surface-container-high rounded-lg font-body-sm text-body-sm hover:bg-surface-variant transition-colors">
+                    <span class="material-symbols-outlined text-sm">download</span>
+                    <span id="log-csv-label">Download CSV</span>
+                </button>
+            </header>
+            <!-- Filter pills -->
+            <div class="flex gap-2 mb-4 flex-wrap" id="log-filter-container">
+                <button data-filter="all"
+                    class="log-filter-pill px-4 py-2 rounded-full font-data-label text-data-label bg-secondary-container text-on-secondary-container transition-all">Semua</button>
+                <button data-filter="pump"
+                    class="log-filter-pill px-4 py-2 rounded-full font-data-label text-data-label bg-surface-container-high text-on-surface-variant hover:bg-surface-variant transition-all">Pump
+                    Events Only</button>
+            </div>
+            <!-- Log info + pagination -->
+            <div class="flex justify-between items-center mb-3">
+                <span id="log-count-label" class="font-data-label text-data-label text-on-surface-variant">0
+                    entries</span>
+                <div class="flex gap-2">
+                    <button id="log-prev" onclick="EventManager.logPrev()"
+                        class="px-3 py-1 bg-surface-container-high rounded font-body-sm text-body-sm hover:bg-surface-variant transition-colors disabled:opacity-40">←
+                        Prev</button>
+                    <button id="log-next" onclick="EventManager.logNext()"
+                        class="px-3 py-1 bg-surface-container-high rounded font-body-sm text-body-sm hover:bg-surface-variant transition-colors disabled:opacity-40">Next
+                        →</button>
+                </div>
+            </div>
+            <!-- Log table -->
+            <div class="bg-surface-container rounded-xl border border-outline-variant overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-outline-variant text-on-surface-variant">
+                            <th class="text-left p-3 font-data-label text-data-label">Waktu</th>
+                            <th class="text-left p-3 font-data-label text-data-label">Tanaman</th>
+                            <th class="text-left p-3 font-data-label text-data-label">Kelembaban</th>
+                            <th class="text-left p-3 font-data-label text-data-label">Suhu</th>
+                            <th class="text-left p-3 font-data-label text-data-label">Pompa</th>
+                            <th class="text-left p-3 font-data-label text-data-label">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="log-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- SETTINGS TAB -->
+        <div id="tab-settings" class="tab-content">
+            <header class="flex justify-between items-center mb-6 py-4 border-b border-outline-variant">
+                <h2 class="font-headline-xl text-headline-xl text-on-surface">Settings</h2>
+            </header>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                <!-- ESP32 IP -->
+                <div class="bg-surface-container rounded-xl border border-outline-variant p-6 col-span-1 lg:col-span-2">
+                    <h3 class="font-headline-sm text-headline-sm mb-4">Koneksi ESP32</h3>
+                    <div class="flex gap-3 items-end">
+                        <div class="flex-1">
+                            <label class="block font-body-sm text-body-sm text-on-surface-variant mb-1">ESP32 IP
+                                Address</label>
+                            <input id="settings-esp32-ip" type="text" value="http://192.168.4.1"
+                                class="w-full bg-surface-container-high border border-outline-variant rounded-lg px-3 py-2 font-data-label text-data-label text-on-surface focus:outline-none focus:border-primary" />
+                        </div>
+                        <button onclick="EventManager.saveESP32IP()"
+                            class="px-4 py-2 bg-primary text-on-primary rounded-lg font-body-sm hover:brightness-110 transition-all">Simpan</button>
+                    </div>
+                </div>
+
+                <!-- Threshold Sliders -->
+                <div class="bg-surface-container rounded-xl border border-outline-variant p-6">
+                    <h3 class="font-headline-sm text-headline-sm mb-4">Threshold Kelembaban</h3>
+                    <div class="flex flex-col gap-5" id="threshold-sliders"></div>
+                </div>
+
+                <!-- Pump Duration -->
+                <div class="bg-surface-container rounded-xl border border-outline-variant p-6">
+                    <h3 class="font-headline-sm text-headline-sm mb-4">Durasi Pompa (detik)</h3>
+                    <div class="flex flex-col gap-4" id="pump-duration-inputs"></div>
+                </div>
+
+                <!-- Read Interval -->
+                <div class="bg-surface-container rounded-xl border border-outline-variant p-6">
+                    <h3 class="font-headline-sm text-headline-sm mb-4">Interval Pembacaan</h3>
+                    <select id="settings-interval" onchange="EventManager.changeInterval(this.value)"
+                        class="w-full bg-surface-container-high border border-outline-variant rounded-lg px-3 py-2 font-data-label text-data-label text-on-surface focus:outline-none focus:border-primary">
+                        <option value="10000">10 detik</option>
+                        <option value="30000" selected>30 detik</option>
+                        <option value="60000">1 menit</option>
+                        <option value="300000">5 menit</option>
+                        <option value="600000">10 menit</option>
+                    </select>
+                </div>
+
+                <!-- WiFi -->
+                <div class="bg-surface-container rounded-xl border border-outline-variant p-6">
+                    <h3 class="font-headline-sm text-headline-sm mb-4">WiFi Config</h3>
+                    <div class="flex gap-2 mb-4">
+                        <button data-wifimode="ap"
+                            class="wifi-mode-btn flex-1 py-2 rounded-lg font-data-label text-data-label bg-secondary-container text-on-secondary-container transition-all">AP
+                            Mode</button>
+                        <button data-wifimode="sta"
+                            class="wifi-mode-btn flex-1 py-2 rounded-lg font-data-label text-data-label bg-surface-container-high text-on-surface-variant transition-all">STA
+                            Mode</button>
+                    </div>
+                    <div class="flex flex-col gap-3">
+                        <div>
+                            <label class="block font-body-sm text-body-sm text-on-surface-variant mb-1">SSID</label>
+                            <input id="wifi-ssid" type="text" placeholder="Network name"
+                                class="w-full bg-surface-container-high border border-outline-variant rounded-lg px-3 py-2 font-body-sm text-on-surface focus:outline-none focus:border-primary" />
+                        </div>
+                        <div>
+                            <label class="block font-body-sm text-body-sm text-on-surface-variant mb-1">Password</label>
+                            <div class="flex gap-2">
+                                <input id="wifi-password" type="password" placeholder="Password"
+                                    class="flex-1 bg-surface-container-high border border-outline-variant rounded-lg px-3 py-2 font-body-sm text-on-surface focus:outline-none focus:border-primary" />
+                                <button onclick="EventManager.togglePasswordVisibility()"
+                                    class="p-2 bg-surface-container-high border border-outline-variant rounded-lg hover:bg-surface-variant transition-colors">
+                                    <span id="pwd-eye-icon" class="material-symbols-outlined text-sm">visibility</span>
+                                </button>
+                            </div>
+                        </div>
+                        <button onclick="EventManager.copyWifiConfig()"
+                            class="flex items-center gap-2 justify-center py-2 bg-surface-container-high border border-outline-variant rounded-lg font-body-sm hover:bg-surface-variant transition-colors">
+                            <span class="material-symbols-outlined text-sm">content_copy</span>
+                            <span id="copy-wifi-label">Copy Arduino Config</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Calibration -->
+                <div class="bg-surface-container rounded-xl border border-outline-variant p-6 col-span-1 lg:col-span-2">
+                    <h3 class="font-headline-sm text-headline-sm mb-4">Kalibrasi Sensor</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="calibration-inputs"></div>
+                </div>
+
+                <!-- System Info -->
+                <div class="bg-surface-container rounded-xl border border-outline-variant p-6 col-span-1 lg:col-span-2">
+                    <h3 class="font-headline-sm text-headline-sm mb-4">Info Sistem</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div>
+                            <div class="font-data-label text-data-label text-on-surface-variant mb-1">IP Address</div>
+                            <div id="sys-ip" class="font-data-display text-data-display text-on-surface text-lg">
+                                192.168.4.1</div>
+                        </div>
+                        <div>
+                            <div class="font-data-label text-data-label text-on-surface-variant mb-1">Uptime</div>
+                            <div id="sys-uptime" class="font-data-display text-data-display text-on-surface text-lg">
+                                00:00:00</div>
+                        </div>
+                        <div>
+                            <div class="font-data-label text-data-label text-on-surface-variant mb-1">Free Heap</div>
+                            <div id="sys-heap" class="font-data-display text-data-display text-on-surface text-lg">--
+                            </div>
+                        </div>
+                        <div>
+                            <div class="font-data-label text-data-label text-on-surface-variant mb-1">Firmware</div>
+                            <div id="sys-firmware" class="font-data-display text-data-display text-on-surface text-lg">
+                                v2.0.0</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Add Plant Modal -->
+    <div id="add-plant-modal" class="fixed inset-0 z-[200] flex items-center justify-center p-4 hidden">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="EventManager.closeModal()"></div>
+        <div
+            class="relative bg-surface-container border border-outline-variant rounded-2xl p-6 w-full max-w-md slide-enter">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="font-headline-sm text-headline-sm text-on-surface">Tambah Tanaman</h3>
+                <button onclick="EventManager.closeModal()"
+                    class="p-1 hover:bg-surface-variant rounded-lg transition-colors">
+                    <span class="material-symbols-outlined text-on-surface-variant">close</span>
+                </button>
+            </div>
+            <div class="flex flex-col gap-4">
+                <div>
+                    <label class="block font-data-label text-data-label text-on-surface-variant mb-1">Nama
+                        Tanaman</label>
+                    <input id="modal-name" type="text" placeholder="cth. Cabai Merah"
+                        class="w-full bg-surface-container-high border border-outline-variant rounded-lg px-3 py-2 font-body-sm text-on-surface focus:outline-none focus:border-primary" />
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-data-label text-data-label text-on-surface-variant mb-1">GPIO
+                            Sensor</label>
+                        <input id="modal-gpio-sensor" type="number" placeholder="34"
+                            class="w-full bg-surface-container-high border border-outline-variant rounded-lg px-3 py-2 font-body-sm text-on-surface focus:outline-none focus:border-primary" />
+                    </div>
+                    <div>
+                        <label class="block font-data-label text-data-label text-on-surface-variant mb-1">GPIO
+                            Pompa</label>
+                        <input id="modal-gpio-pump" type="number" placeholder="26"
+                            class="w-full bg-surface-container-high border border-outline-variant rounded-lg px-3 py-2 font-body-sm text-on-surface focus:outline-none focus:border-primary" />
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-data-label text-data-label text-on-surface-variant mb-1">Threshold
+                        Kelembaban: <span id="modal-threshold-val">40</span>%</label>
+                    <input id="modal-threshold" type="range" min="10" max="90" value="40"
+                        class="w-full accent-green-400 cursor-pointer"
+                        oninput="document.getElementById('modal-threshold-val').textContent=this.value" />
+                </div>
+                <div>
+                    <label class="block font-data-label text-data-label text-on-surface-variant mb-2">Warna
+                        Kartu</label>
+                    <div class="flex gap-2 flex-wrap" id="modal-color-picker">
+                        <button data-color="#4ade80"
+                            class="color-opt w-8 h-8 rounded-full border-2 border-white/50 hover:scale-110 transition-transform"
+                            style="background:#4ade80"></button>
+                        <button data-color="#fbbf24"
+                            class="color-opt w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform"
+                            style="background:#fbbf24"></button>
+                        <button data-color="#60a5fa"
+                            class="color-opt w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform"
+                            style="background:#60a5fa"></button>
+                        <button data-color="#f87171"
+                            class="color-opt w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform"
+                            style="background:#f87171"></button>
+                        <button data-color="#c084fc"
+                            class="color-opt w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform"
+                            style="background:#c084fc"></button>
+                        <button data-color="#fb923c"
+                            class="color-opt w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform"
+                            style="background:#fb923c"></button>
+                        <button data-color="#34d399"
+                            class="color-opt w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform"
+                            style="background:#34d399"></button>
+                        <button data-color="#e879f9"
+                            class="color-opt w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform"
+                            style="background:#e879f9"></button>
+                    </div>
+                </div>
+                <div id="modal-error" class="text-red-400 font-body-sm text-body-sm hidden"></div>
+                <div class="flex gap-3 pt-2">
+                    <button onclick="EventManager.closeModal()"
+                        class="flex-1 py-2 bg-surface-container-high border border-outline-variant rounded-lg font-body-sm text-on-surface-variant hover:bg-surface-variant transition-colors">Batal</button>
+                    <button onclick="EventManager.submitAddPlant()"
+                        class="flex-1 py-2 bg-primary text-on-primary rounded-lg font-body-sm font-semibold hover:brightness-110 transition-all">Tambah</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirm Modal -->
+    <div id="delete-plant-modal" class="fixed inset-0 z-[200] flex items-center justify-center p-4 hidden">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="EventManager.closeDeleteModal()"></div>
+        <div
+            class="relative bg-surface-container border border-outline-variant rounded-2xl p-6 w-full max-w-sm slide-enter">
+            <div class="flex flex-col items-center gap-4 text-center">
+                <div class="w-12 h-12 rounded-full bg-error-container flex items-center justify-center">
+                    <span class="material-symbols-outlined text-error">delete</span>
+                </div>
+                <div>
+                    <h3 class="font-headline-sm text-headline-sm text-on-surface mb-1">Hapus Tanaman?</h3>
+                    <p class="font-body-sm text-body-sm text-on-surface-variant">Tanaman "<span
+                            id="delete-plant-name"></span>" akan dihapus permanen.</p>
+                </div>
+                <div class="flex gap-3 w-full pt-2">
+                    <button onclick="EventManager.closeDeleteModal()"
+                        class="flex-1 py-2 bg-surface-container-high border border-outline-variant rounded-lg font-body-sm text-on-surface-variant hover:bg-surface-variant transition-colors">Batal</button>
+                    <button onclick="EventManager.confirmDelete()"
+                        class="flex-1 py-2 bg-error-container text-on-error-container rounded-lg font-body-sm font-semibold hover:brightness-110 transition-all">Hapus</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom NavBar (Mobile) -->
+    <nav
+        class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center pb-2 pt-2 px-4 bg-surface-container-highest/95 backdrop-blur-lg border-t border-outline-variant lg:hidden">
+        <a href="#dashboard"
+            class="bottom-nav-link flex flex-col items-center justify-center p-2 px-4 rounded-full transition-colors text-on-surface-variant hover:text-primary"
+            data-tab="dashboard">
+            <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1">dashboard</span>
+            <span class="text-[10px] mt-0.5">Home</span>
+        </a>
+        <a href="#chart"
+            class="bottom-nav-link flex flex-col items-center justify-center p-2 px-4 rounded-full transition-colors text-on-surface-variant hover:text-primary"
+            data-tab="chart">
+            <span class="material-symbols-outlined">monitoring</span>
+            <span class="text-[10px] mt-0.5">Stats</span>
+        </a>
+        <a href="#log"
+            class="bottom-nav-link flex flex-col items-center justify-center p-2 px-4 rounded-full transition-colors text-on-surface-variant hover:text-primary"
+            data-tab="log">
+            <span class="material-symbols-outlined">database</span>
+            <span class="text-[10px] mt-0.5">Logs</span>
+        </a>
+        <a href="#settings"
+            class="bottom-nav-link flex flex-col items-center justify-center p-2 px-4 rounded-full transition-colors text-on-surface-variant hover:text-primary"
+            data-tab="settings">
+            <span class="material-symbols-outlined">tune</span>
+            <span class="text-[10px] mt-0.5">Settings</span>
+        </a>
+    </nav>
+
+    <script>
+        // ─────────────────────────────────────────
+        // 1. STATE
+        // ─────────────────────────────────────────
+        const STATE = {
+            plants: [],
+            temperature: 29,
+            humidity: 75,
+            isLive: false,
+            log: [],
+            logFilter: 'all',
+            logPage: 0,
+            logPageSize: 50,
+            chartRange: '30min',
+            activeTab: 'dashboard',
+            loadingDone: false,
+            chartInstance: null,
+            selectedColor: '#4ade80',
+            pendingDeleteId: null,
+            fetchInterval: 30000,
+        };
+
+        // ─────────────────────────────────────────
+        // 2. API HELPER
+        // ─────────────────────────────────────────
+        const API = {
+            async get(path) {
+                const res = await fetch(path);
+                if (!res.ok) throw new Error(await res.text());
+                return res.json();
+            },
+            async post(path, body) {
+                const res = await fetch(path, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+                });
+                if (!res.ok) throw new Error(await res.text());
+                return res.json();
+            },
+            async put(path, body) {
+                const res = await fetch(path, {
+                    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+                });
+                if (!res.ok) throw new Error(await res.text());
+                return res.json();
+            },
+            async del(path) {
+                const res = await fetch(path, { method: 'DELETE' });
+                if (!res.ok) throw new Error(await res.text());
+                return res.json();
+            },
+        };
+
+        // ─────────────────────────────────────────
+        // 3. DATA MANAGER
+        // ─────────────────────────────────────────
+        const DataManager = {
+            async fetchLatest() {
+                const data = await API.get('/api/data');
+                STATE.isLive = data.isLive;
+                STATE.temperature = data.temperature;
+                STATE.humidity = data.humidity;
+                STATE.plants = data.plants;
+                if (data.summary) {
+                    document.getElementById('pill-active').textContent = data.summary.active;
+                    document.getElementById('pill-need-water').textContent = data.summary.need_water;
+                    document.getElementById('pill-pumps-on').textContent = data.summary.pumps_on;
+                    document.getElementById('pill-total-water').textContent = data.summary.total_water_today;
+                }
+                const ts = data.timestamp || new Date().toTimeString().slice(0, 8);
+                document.getElementById('dash-last-update').textContent = ts;
+                document.getElementById('side-last-update').textContent = ts;
+                return data;
+            },
+
+            async fetchHistory(range) {
+                return API.get(`/api/data/history?range=${range || STATE.chartRange}`);
+            },
+
+            async fetchLogs(filter, page) {
+                const params = new URLSearchParams({
+                    filter: filter || STATE.logFilter || 'all',
+                    page: String(page || STATE.logPage || 0),
+                    page_size: String(STATE.logPageSize),
+                });
+                return API.get(`/api/logs?${params}`);
+            },
+
+            async togglePump(id, state) {
+                return API.post(`/api/pump/${id}`, { state });
+            },
+        };
+
+        // ─────────────────────────────────────────
+        // 4. UI MANAGER
+        // ─────────────────────────────────────────
+        const UIManager = {
+            getStatusInfo(plant) {
+                const { moisture, threshold, pump } = plant;
+                if (pump) return { label: 'MENYIRAM', color: '#60a5fa', bgClass: 'bg-blue-500/10', textClass: 'text-blue-400' };
+                if (moisture < threshold - 10) return { label: 'KERING', color: '#f87171', bgClass: 'bg-red-500/10', textClass: 'text-red-400' };
+                if (moisture < threshold) return { label: 'PERLU SIRAM', color: '#fbbf24', bgClass: 'bg-amber-500/10', textClass: 'text-amber-400' };
+                return { label: 'NORMAL', color: '#4ade80', bgClass: 'bg-green-500/10', textClass: 'text-green-400' };
+            },
+
+            getMoistureColor(plant) {
+                const { moisture, threshold, pump } = plant;
+                if (pump) return '#60a5fa';
+                if (moisture >= threshold + 10) return '#4ade80';
+                if (moisture >= threshold) return '#fbbf24';
+                return '#f87171';
+            },
+
+            renderDashboard() {
+                const grid = document.getElementById('plant-cards-grid');
+                if (!STATE.plants.length) return;
+
+                let html = '';
+                STATE.plants.forEach((plant, i) => {
+                    const status = this.getStatusInfo(plant);
+                    const mColor = this.getMoistureColor(plant);
+                    const pumpOn = plant.pump;
+                    const delay = i * 100;
+
+                    html += `
+      <article class="card-fadein bg-surface-container rounded-xl border border-outline-variant hover:border-primary/50 transition-all flex flex-col relative group overflow-hidden" style="animation-delay:${delay}ms">
+        <div class="h-1 w-full" style="background:${plant.color || '#4ade80'}"></div>
+        <div class="p-6 flex flex-col gap-6 flex-1">
+        <div class="flex justify-between items-start">
+          <div>
+            <h3 class="font-headline-sm text-headline-sm text-on-surface mb-2">${plant.name}</h3>
+            <div class="inline-flex items-center px-2 py-1 ${status.bgClass} rounded">
+              <span class="font-data-label text-data-label ${status.textClass}">${status.label}</span>
+            </div>
+          </div>
+          <div class="flex items-start gap-2">
+            <div class="text-right">
+              <div class="font-data-display text-data-display text-on-surface">${STATE.temperature !== undefined ? STATE.temperature.toFixed(1) : '--'}°C</div>
+              <div class="font-data-label text-data-label text-on-surface-variant">GPIO ${plant.gpio_sensor || '--'}</div>
+            </div>
+            <button class="delete-plant-btn opacity-0 group-hover:opacity-100 transition-opacity p-1.5 hover:bg-error-container/50 rounded-lg"
+              data-plant-id="${plant.id}" data-plant-name="${plant.name}">
+              <span class="material-symbols-outlined text-error" style="font-size:16px">delete</span>
+            </button>
+          </div>
+        </div>
+        <div>
+          <div class="flex justify-between items-end mb-2">
+            <span class="font-body-sm text-body-sm text-on-surface-variant">Kelembaban</span>
+            <span class="font-data-display text-data-display" style="color:${mColor}">${plant.moisture}%</span>
+          </div>
+          <div class="h-1.5 bg-surface-variant rounded-full overflow-hidden group-hover:h-2.5 transition-all">
+            <div class="h-full rounded-full moisture-bar" style="width:${plant.moisture}%;background:${mColor}"></div>
+          </div>
+          <div class="flex justify-between mt-1">
+            <span class="font-data-label text-data-label text-on-surface-variant">0%</span>
+            <span class="font-data-label text-data-label text-on-surface-variant">Threshold: ${plant.threshold}%</span>
+            <span class="font-data-label text-data-label text-on-surface-variant">100%</span>
+          </div>
+        </div>
+        <div class="flex items-center justify-between border-t border-outline-variant pt-4 mt-auto">
+          <div>
+            <span class="font-body-sm text-body-sm text-on-surface-variant">Pompa Manual</span>
+          </div>
+          <button class="pump-toggle-btn ${pumpOn ? 'bg-blue-500 text-white' : 'bg-surface-variant text-on-surface-variant'} px-4 py-2 rounded-lg font-headline-sm text-headline-sm hover:brightness-110 transition-all flex items-center gap-1"
+            data-plant-id="${plant.id}" data-pump-state="${pumpOn ? '1' : '0'}">
+            ${pumpOn ? '<span class="material-symbols-outlined text-sm" style="animation:spin 1s linear infinite">autorenew</span>' : ''}
+            ${pumpOn ? 'ON' : 'OFF'}
+          </button>
+        </div>
+        </div>
+      </article>`;
+                });
+                grid.innerHTML = html;
+
+                grid.querySelectorAll('.pump-toggle-btn').forEach(btn => {
+                    btn.addEventListener('click', () => EventManager.togglePump(btn));
+                });
+                grid.querySelectorAll('.delete-plant-btn').forEach(btn => {
+                    btn.addEventListener('click', () => EventManager.openDeleteModal(
+                        parseInt(btn.dataset.plantId), btn.dataset.plantName
+                    ));
+                });
+            },
+
+            async renderChart() {
+                const result = await DataManager.fetchHistory();
+                const plants = STATE.plants.length ? STATE.plants : await API.get('/api/plants');
+                const plantMap = {};
+                plants.forEach(p => { plantMap[p.id] = p; });
+
+                let labels = [];
+                const datasets = [];
+                const sorted = plants.sort((a, b) => a.id - b.id);
+
+                sorted.forEach(p => {
+                    const hist = result[p.id];
+                    if (!hist || !hist.data || !hist.data.length) return;
+                    if (!labels.length) labels = hist.data.map(h => h.time);
+                    datasets.push({
+                        label: hist.name || p.name,
+                        data: hist.data.map(h => h.moisture),
+                        borderColor: hist.color || p.color || '#4ade80',
+                        backgroundColor: (hist.color || p.color || '#4ade80') + '22',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 3,
+                        borderWidth: 2,
+                    });
+                });
+
+                const ctx = document.getElementById('moisture-chart').getContext('2d');
+                if (STATE.chartInstance) {
+                    STATE.chartInstance.data.labels = labels;
+                    STATE.chartInstance.data.datasets = datasets;
+                    STATE.chartInstance.update();
+                } else {
+                    STATE.chartInstance = new Chart(ctx, {
+                        type: 'line',
+                        data: { labels, datasets },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { labels: { color: '#bccabb', font: { family: 'JetBrains Mono', size: 11 } } } },
+                            scales: {
+                                x: { ticks: { color: '#869486', font: { family: 'JetBrains Mono', size: 10 } }, grid: { color: '#3d4a3e55' } },
+                                y: {
+                                    min: 0, max: 100,
+                                    ticks: { callback: v => v + '%', color: '#869486', font: { family: 'JetBrains Mono', size: 10 } },
+                                    grid: { color: '#3d4a3e55' },
+                                },
+                            },
+                        },
+                    });
+                }
+
+                const statsDiv = document.getElementById('chart-stats');
+                let statsHtml = '';
+                sorted.forEach(p => {
+                    const hist = result[p.id];
+                    if (!hist || !hist.data || !hist.data.length) return;
+                    const data = hist.data.map(h => h.moisture);
+                    const min = Math.min(...data);
+                    const max = Math.max(...data);
+                    const avg = Math.round(data.reduce((a, b) => a + b, 0) / data.length);
+                    const trend = data.length < 2 ? '→' : data[data.length - 1] > data[0] ? '↑' : data[data.length - 1] < data[0] ? '↓' : '→';
+                    const tColor = trend === '↑' ? '#4ade80' : trend === '↓' ? '#f87171' : '#bccabb';
+                    statsHtml += `
+      <div class="bg-surface-container rounded-xl border border-outline-variant p-4">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-3 h-3 rounded-full" style="background:${hist.color || p.color || '#4ade80'}"></div>
+          <span class="font-headline-sm text-headline-sm text-on-surface">${hist.name || p.name}</span>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><div class="font-data-label text-data-label text-on-surface-variant">Min</div><div class="font-data-display text-data-display text-on-surface">${min}%</div></div>
+          <div><div class="font-data-label text-data-label text-on-surface-variant">Max</div><div class="font-data-display text-data-display text-on-surface">${max}%</div></div>
+          <div><div class="font-data-label text-data-label text-on-surface-variant">Rata-rata</div><div class="font-data-display text-data-display text-on-surface">${avg}%</div></div>
+          <div><div class="font-data-label text-data-label text-on-surface-variant">Tren</div><div class="font-data-display text-data-display" style="color:${tColor}">${trend}</div></div>
+        </div>
+      </div>`;
+                });
+                statsDiv.innerHTML = statsHtml;
+            },
+
+            async renderLog() {
+                await this.populateLogFilters();
+                const result = await DataManager.fetchLogs();
+                STATE.log = result.rows;
+                const total = result.total;
+
+                const page = STATE.logPage;
+                const start = page * STATE.logPageSize;
+                const end = Math.min(start + STATE.logPageSize, total);
+
+                const label = total === 0 ? '0 entries' : `${start + 1}–${end} dari ${total} entries`;
+                document.getElementById('log-count-label').textContent = label;
+                document.getElementById('log-prev').disabled = page === 0;
+                document.getElementById('log-next').disabled = end >= total;
+
+                const statusColor = (s) => {
+                    if (s === 'MENYIRAM') return 'text-blue-400';
+                    if (s === 'KERING') return 'text-red-400';
+                    if (s === 'PERLU SIRAM') return 'text-amber-400';
+                    return 'text-green-400';
+                };
+
+                const tbody = document.getElementById('log-table-body');
+                if (!result.rows.length) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center p-8 text-on-surface-variant font-body-sm">Tidak ada data</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = result.rows.map((row, i) => {
+                    const mColor = row.moisture < 30 ? 'text-red-400' : row.moisture < 50 ? 'text-amber-400' : 'text-green-400';
+                    const pColor = row.pump ? 'text-blue-400 font-semibold' : 'text-on-surface-variant';
+                    const bg = i % 2 === 1 ? 'bg-surface-container-high/30' : '';
+                    const timeLabel = row.created_at ? new Date(row.created_at).toTimeString().slice(0, 8) : row.time || '--';
+                    return `
+      <tr class="${bg} hover:bg-surface-variant/20 transition-colors">
+        <td class="p-3 font-data-label text-data-label text-on-surface-variant">${timeLabel}</td>
+        <td class="p-3 font-body-sm text-on-surface">${row.plant_name}</td>
+        <td class="p-3 font-data-label text-data-label ${mColor}">${row.moisture}%</td>
+        <td class="p-3 font-data-label text-data-label text-on-surface-variant">${row.temperature !== undefined && row.temperature !== null ? Number(row.temperature).toFixed(1) : '--'}°C</td>
+        <td class="p-3 font-data-label text-data-label ${pColor}">${row.pump ? 'ON' : 'OFF'}</td>
+        <td class="p-3"><span class="font-data-label text-data-label ${statusColor(row.status)}">${row.status}</span></td>
+      </tr>`;
+                }).join('');
+            },
+
+            async renderSettings() {
+                const plants = await API.get('/api/plants');
+                const settings = await API.get('/api/settings');
+
+                // Threshold sliders
+                const sliderDiv = document.getElementById('threshold-sliders');
+                sliderDiv.innerHTML = plants.map(p => `
+      <div>
+        <div class="flex justify-between mb-1">
+          <label class="font-body-sm text-body-sm text-on-surface-variant">${p.name}</label>
+          <span id="threshold-val-${p.id}" class="font-data-label text-data-label text-primary">${p.threshold}%</span>
+        </div>
+        <input type="range" min="10" max="90" step="1" value="${p.threshold}"
+          class="w-full accent-green-400 cursor-pointer"
+          oninput="EventManager.updateThreshold(${p.id}, this.value)"/>
+      </div>`).join('');
+
+                // Pump duration
+                const pumpDiv = document.getElementById('pump-duration-inputs');
+                pumpDiv.innerHTML = plants.map(p => `
+      <div class="flex items-center gap-3">
+        <label class="font-body-sm text-body-sm text-on-surface-variant w-28">${p.name}</label>
+        <input type="number" min="1" max="30" value="${p.pump_duration || 5}"
+          class="w-24 bg-surface-container-high border border-outline-variant rounded-lg px-3 py-2 font-data-label text-data-label text-on-surface focus:outline-none focus:border-primary"
+          onchange="EventManager.updatePumpDuration(${p.id}, this.value)"/>
+        <span class="font-body-sm text-body-sm text-on-surface-variant">detik</span>
+      </div>`).join('');
+
+                // Calibration
+                const calDiv = document.getElementById('calibration-inputs');
+                calDiv.innerHTML = plants.map(p => `
+      <div class="bg-surface-container-high rounded-xl p-4">
+        <div class="font-headline-sm text-headline-sm text-on-surface mb-3">${p.name}</div>
+        <div class="flex flex-col gap-2 mb-3">
+          <div class="flex items-center gap-2">
+            <label class="font-data-label text-data-label text-on-surface-variant w-10">Dry</label>
+            <input type="number" value="${p.dry_value || 3500}"
+              class="flex-1 bg-surface-container border border-outline-variant rounded px-2 py-1 font-data-label text-data-label text-on-surface focus:outline-none focus:border-primary"
+              onchange="EventManager.updateCalibration(${p.id}, 'dry', this.value)"/>
+          </div>
+          <div class="flex items-center gap-2">
+            <label class="font-data-label text-data-label text-on-surface-variant w-10">Wet</label>
+            <input type="number" value="${p.wet_value || 1200}"
+              class="flex-1 bg-surface-container border border-outline-variant rounded px-2 py-1 font-data-label text-data-label text-on-surface focus:outline-none focus:border-primary"
+              onchange="EventManager.updateCalibration(${p.id}, 'wet', this.value)"/>
+          </div>
+        </div>
+        <button class="w-full py-1.5 bg-surface-container border border-outline-variant rounded text-on-surface-variant font-data-label text-data-label hover:bg-surface-variant transition-colors"
+          onclick="EventManager.readSensorADC(${p.id}, this)">Read Current ADC</button>
+      </div>`).join('');
+
+                // ESP32 IP
+                document.getElementById('settings-esp32-ip').value = settings.esp_url || 'http://192.168.4.1';
+
+                // Interval
+                document.getElementById('settings-interval').value = String(settings.fetch_interval || '30000');
+            },
+
+            updateStatusBadge() {
+                const isLive = STATE.isLive;
+                const color = isLive ? '#4ade80' : '#fbbf24';
+                const label = isLive ? 'LIVE' : 'OFFLINE';
+
+                ['top-status-dot', 'side-status-dot'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.style.background = color;
+                });
+                ['top-status-label', 'side-status-label'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) { el.textContent = label; el.style.color = color; }
+                });
+            },
+
+            async populateLogFilters() {
+                const container = document.getElementById('log-filter-container');
+                const plants = await API.get('/api/plants');
+                const existing = container.querySelectorAll('[data-filter]');
+                const existingFilters = new Set();
+                existing.forEach(b => existingFilters.add(b.dataset.filter));
+                plants.forEach(p => {
+                    if (existingFilters.has(p.name)) return;
+                    const btn = document.createElement('button');
+                    btn.dataset.filter = p.name;
+                    btn.className = 'log-filter-pill px-4 py-2 rounded-full font-data-label text-data-label bg-surface-container-high text-on-surface-variant hover:bg-surface-variant transition-all';
+                    btn.textContent = p.name;
+                    btn.addEventListener('click', () => {
+                        STATE.logFilter = p.name;
+                        STATE.logPage = 0;
+                        document.querySelectorAll('.log-filter-pill').forEach(b => {
+                            b.classList.toggle('bg-secondary-container', b === btn);
+                            b.classList.toggle('text-on-secondary-container', b === btn);
+                            b.classList.toggle('bg-surface-container-high', b !== btn);
+                            b.classList.toggle('text-on-surface-variant', b !== btn);
+                        });
+                        UIManager.renderLog();
+                    });
+                    container.appendChild(btn);
+                });
+            },
+
+            downloadCSV() {
+                const btn = document.getElementById('log-csv-label');
+                const filter = STATE.logFilter || 'all';
+                window.open(`/api/export/csv?filter=${filter}`, '_blank');
+                if (btn) { btn.textContent = '✓ Tersimpan!'; setTimeout(() => btn.textContent = 'Download CSV', 2000); }
+            },
+
+            switchTab(tab) {
+                STATE.activeTab = tab;
+                document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+                document.getElementById('tab-' + tab).classList.add('active');
+
+                document.querySelectorAll('.nav-link').forEach(el => {
+                    el.classList.remove('bg-secondary-container', 'text-on-secondary-container', 'font-semibold');
+                    el.classList.add('text-on-surface-variant');
+                });
+                const navEl = document.getElementById('nav-' + tab);
+                if (navEl) {
+                    navEl.classList.add('bg-secondary-container', 'text-on-secondary-container', 'font-semibold');
+                    navEl.classList.remove('text-on-surface-variant');
+                }
+
+                document.querySelectorAll('.bottom-nav-link').forEach(el => {
+                    const active = el.dataset.tab === tab;
+                    el.classList.toggle('bg-primary-container', active);
+                    el.classList.toggle('text-on-primary-container', active);
+                    el.classList.toggle('text-on-surface-variant', !active);
+                });
+
+                if (tab === 'chart') this.renderChart();
+                if (tab === 'log') this.renderLog();
+                if (tab === 'settings') this.renderSettings();
+            },
+        };
+
+        // ─────────────────────────────────────────
+        // 5. EVENT MANAGER
+        // ─────────────────────────────────────────
+        const EventManager = {
+            async togglePump(btn) {
+                const id = parseInt(btn.dataset.plantId);
+                const currentState = btn.dataset.pumpState === '1';
+                const newState = !currentState;
+
+                const plant = STATE.plants.find(p => p.id === id);
+                if (!plant) return;
+                plant.pump = newState;
+                UIManager.renderDashboard();
+
+                try {
+                    await DataManager.togglePump(id, newState);
+                } catch (e) {
+                    plant.pump = currentState;
+                    UIManager.renderDashboard();
+                }
+            },
+
+            async updateThreshold(plantId, value) {
+                try {
+                    await API.put(`/api/plants/${plantId}`, { threshold: parseInt(value) });
+                } catch (e) { /* ignore */ }
+                const valEl = document.getElementById(`threshold-val-${plantId}`);
+                if (valEl) valEl.textContent = value + '%';
+            },
+
+            async updatePumpDuration(plantId, value) {
+                try {
+                    await API.put(`/api/plants/${plantId}`, { pump_duration: parseInt(value) });
+                } catch (e) { /* ignore */ }
+            },
+
+            async updateCalibration(plantId, type, value) {
+                const key = type === 'dry' ? 'dry_value' : 'wet_value';
+                try {
+                    await API.put(`/api/plants/${plantId}`, { [key]: parseInt(value) });
+                } catch (e) { /* ignore */ }
+            },
+
+            readSensorADC(plantId, btn) {
+                const val = 1000 + Math.floor(Math.random() * 3000);
+                const orig = btn.textContent;
+                btn.textContent = `ADC: ${val}`;
+                setTimeout(() => btn.textContent = orig, 3000);
+            },
+
+            async changeInterval(val) {
+                STATE.fetchInterval = parseInt(val);
+                try {
+                    await API.put('/api/settings', { fetch_interval: val });
+                } catch (e) { /* ignore */ }
+            },
+
+            async saveESP32IP() {
+                let url = document.getElementById('settings-esp32-ip').value.trim();
+                if (url && !url.startsWith('http')) url = 'http://' + url;
+                document.getElementById('settings-esp32-ip').value = url;
+                try {
+                    await API.put('/api/settings', { esp_url: url });
+                } catch (e) { /* ignore */ }
+            },
+
+            togglePasswordVisibility() {
+                const inp = document.getElementById('wifi-password');
+                const icon = document.getElementById('pwd-eye-icon');
+                if (inp.type === 'password') { inp.type = 'text'; icon.textContent = 'visibility_off'; }
+                else { inp.type = 'password'; icon.textContent = 'visibility'; }
+            },
+
+            copyWifiConfig() {
+                const ssid = document.getElementById('wifi-ssid').value;
+                const pass = document.getElementById('wifi-password').value;
+                const mode = 'ap';
+                const snippet = `// WiFi Config (${mode.toUpperCase()} Mode)\nconst char* ssid = "${ssid}";\nconst char* password = "${pass}";`;
+                navigator.clipboard.writeText(snippet).then(() => {
+                    const btn = document.getElementById('copy-wifi-label');
+                    btn.textContent = '✓ Copied!';
+                    setTimeout(() => btn.textContent = 'Copy Arduino Config', 2000);
+                });
+            },
+
+            async manualRefresh() {
+                const icons = ['top-refresh-icon', 'side-refresh-icon'];
+                icons.forEach(id => { const el = document.getElementById(id); if (el) el.classList.add('spin'); });
+                const minDelay = new Promise(r => setTimeout(r, 300));
+                await Promise.all([this.fetchAndUpdate(), minDelay]);
+                icons.forEach(id => { const el = document.getElementById(id); if (el) el.classList.remove('spin'); });
+            },
+
+            async fetchAndUpdate() {
+                try {
+                    const data = await DataManager.fetchLatest();
+                    UIManager.updateStatusBadge();
+                    if (STATE.loadingDone) {
+                        if (STATE.activeTab === 'dashboard') UIManager.renderDashboard();
+                        else if (STATE.activeTab === 'chart') UIManager.renderChart();
+                        else if (STATE.activeTab === 'log') UIManager.renderLog();
+                    }
+                } catch (e) {
+                    console.warn('Fetch failed:', e);
+                }
+            },
+
+            logPrev() {
+                if (STATE.logPage > 0) { STATE.logPage--; UIManager.renderLog(); }
+            },
+
+            logNext() {
+                STATE.logPage++;
+                UIManager.renderLog();
+            },
+
+            openModal() {
+                STATE.selectedColor = '#4ade80';
+                document.getElementById('modal-name').value = '';
+                document.getElementById('modal-gpio-sensor').value = '';
+                document.getElementById('modal-gpio-pump').value = '';
+                document.getElementById('modal-threshold').value = 40;
+                document.getElementById('modal-threshold-val').textContent = '40';
+                document.getElementById('modal-error').classList.add('hidden');
+                document.querySelectorAll('.color-opt').forEach(b => {
+                    b.style.borderColor = b.dataset.color === '#4ade80' ? 'white' : 'transparent';
+                });
+                document.getElementById('add-plant-modal').classList.remove('hidden');
+                document.getElementById('modal-name').focus();
+            },
+
+            closeModal() {
+                document.getElementById('add-plant-modal').classList.add('hidden');
+            },
+
+            async submitAddPlant() {
+                const name = document.getElementById('modal-name').value.trim();
+                const gpio_sensor = parseInt(document.getElementById('modal-gpio-sensor').value);
+                const gpio_pump = parseInt(document.getElementById('modal-gpio-pump').value);
+                const threshold = parseInt(document.getElementById('modal-threshold').value);
+                const errEl = document.getElementById('modal-error');
+
+                if (!name) { errEl.textContent = 'Nama tanaman wajib diisi.'; errEl.classList.remove('hidden'); return; }
+                if (isNaN(gpio_sensor) || gpio_sensor < 0 || gpio_sensor > 39) { errEl.textContent = 'GPIO Sensor tidak valid (0–39).'; errEl.classList.remove('hidden'); return; }
+                if (isNaN(gpio_pump) || gpio_pump < 0 || gpio_pump > 39) { errEl.textContent = 'GPIO Pompa tidak valid (0–39).'; errEl.classList.remove('hidden'); return; }
+
+                try {
+                    await API.post('/api/plants', { name, gpio_sensor, gpio_pump, threshold, color: STATE.selectedColor });
+                    this.closeModal();
+                    await this.fetchAndUpdate();
+                    if (STATE.activeTab === 'settings') UIManager.renderSettings();
+                    if (STATE.activeTab === 'chart') UIManager.renderChart();
+                } catch (e) {
+                    errEl.textContent = 'Gagal menambah tanaman.';
+                    errEl.classList.remove('hidden');
+                }
+            },
+
+            openDeleteModal(plantId, plantName) {
+                STATE.pendingDeleteId = plantId;
+                document.getElementById('delete-plant-name').textContent = plantName;
+                document.getElementById('delete-plant-modal').classList.remove('hidden');
+            },
+
+            closeDeleteModal() {
+                STATE.pendingDeleteId = null;
+                document.getElementById('delete-plant-modal').classList.add('hidden');
+            },
+
+            async confirmDelete() {
+                const id = STATE.pendingDeleteId;
+                if (!id) return;
+
+                try {
+                    await API.del(`/api/plants/${id}`);
+                    this.closeDeleteModal();
+                    await this.fetchAndUpdate();
+                    if (STATE.activeTab === 'settings') UIManager.renderSettings();
+                    if (STATE.activeTab === 'chart') UIManager.renderChart();
+                } catch (e) { /* ignore */ }
+            },
+        };
+
+        // ─────────────────────────────────────────
+        // 6. WEBSOCKET
+        // ─────────────────────────────────────────
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws`;
+            let ws;
+
+            function connect() {
+                ws = new WebSocket(wsUrl);
+                ws.onmessage = (event) => {
+                    try {
+                        const msg = JSON.parse(event.data);
+                        if (msg.type === 'data_update') {
+                            STATE.isLive = msg.isLive;
+                            STATE.temperature = msg.temperature;
+                            STATE.humidity = msg.humidity;
+                            if (msg.plants) {
+                                STATE.plants = msg.plants;
+                            }
+                            UIManager.updateStatusBadge();
+                            const ts = msg.timestamp || new Date().toTimeString().slice(0, 8);
+                            document.getElementById('dash-last-update').textContent = ts;
+                            document.getElementById('side-last-update').textContent = ts;
+                            if (STATE.loadingDone && STATE.activeTab === 'dashboard') {
+                                UIManager.renderDashboard();
+                            }
+                        } else if (msg.type === 'plants_changed') {
+                            if (STATE.activeTab !== 'dashboard') EventManager.fetchAndUpdate();
+                        }
+                    } catch (e) { /* ignore */ }
+                };
+                ws.onclose = () => setTimeout(connect, 3000);
+                ws.onerror = () => ws.close();
+            }
+            connect();
+        }
+
+        // ─────────────────────────────────────────
+        // 7. INIT
+        // ─────────────────────────────────────────
+        async function init() {
+            // Tab navigation
+            document.querySelectorAll('.nav-link, .bottom-nav-link').forEach(el => {
+                el.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const href = el.getAttribute('href');
+                    const tab = href ? href.replace('#', '') : el.dataset.tab;
+                    if (tab) {
+                        window.location.hash = tab;
+                        UIManager.switchTab(tab);
+                    }
+                });
+            });
+
+            // Range pills
+            document.querySelectorAll('.range-pill').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    STATE.chartRange = btn.dataset.range;
+                    document.querySelectorAll('.range-pill').forEach(b => {
+                        b.classList.toggle('bg-secondary-container', b === btn);
+                        b.classList.toggle('text-on-secondary-container', b === btn);
+                        b.classList.toggle('bg-surface-container-high', b !== btn);
+                        b.classList.toggle('text-on-surface-variant', b !== btn);
+                    });
+                    UIManager.renderChart();
+                });
+            });
+
+            // Log filter pills
+            document.querySelectorAll('.log-filter-pill').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    STATE.logFilter = btn.dataset.filter;
+                    STATE.logPage = 0;
+                    document.querySelectorAll('.log-filter-pill').forEach(b => {
+                        b.classList.toggle('bg-secondary-container', b === btn);
+                        b.classList.toggle('text-on-secondary-container', b === btn);
+                        b.classList.toggle('bg-surface-container-high', b !== btn);
+                        b.classList.toggle('text-on-surface-variant', b !== btn);
+                    });
+                    UIManager.renderLog();
+                });
+            });
+
+            // WiFi mode buttons
+            document.querySelectorAll('.wifi-mode-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.wifi-mode-btn').forEach(b => {
+                        b.classList.toggle('bg-secondary-container', b === btn);
+                        b.classList.toggle('text-on-secondary-container', b === btn);
+                        b.classList.toggle('bg-surface-container-high', b !== btn);
+                        b.classList.toggle('text-on-surface-variant', b !== btn);
+                    });
+                });
+            });
+
+            const hash = window.location.hash.replace('#', '') || 'dashboard';
+            const validTabs = ['dashboard', 'chart', 'log', 'settings'];
+            const startTab = validTabs.includes(hash) ? hash : 'dashboard';
+
+            // First fetch + min 600ms skeleton
+            const minSkeleton = new Promise(r => setTimeout(r, 600));
+            await Promise.all([EventManager.fetchAndUpdate(), minSkeleton]);
+
+            STATE.loadingDone = true;
+            UIManager.switchTab(startTab);
+
+            // WebSocket for real-time updates
+            connectWebSocket();
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+
+</html>
