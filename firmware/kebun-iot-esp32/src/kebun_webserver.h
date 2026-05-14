@@ -20,6 +20,7 @@ void handleConfigPost();
 void handleConfigSync();
 void handleWiFiPost();
 void handleReset();
+void handleSensorRead();
 void handleNotFound();
 void sendCORS();
 
@@ -299,6 +300,30 @@ void handleReset() {
   ESP.restart();
 }
 
+void handleSensorRead() {
+  int id = server.arg("id").toInt();
+  if (id <= 0) {
+    sendJSON(400, "{\"error\":\"id required\"}");
+    return;
+  }
+  int idx = -1;
+  for (int i = 0; i < g_plantCount; i++) {
+    if (g_plants[i].id == id) { idx = i; break; }
+  }
+  if (idx < 0) {
+    sendJSON(404, "{\"error\":\"plant not found\"}");
+    return;
+  }
+  readSoilMoisture(idx);
+  int raw = analogRead(g_plants[idx].sensorPin);
+  String json = "{";
+  json += "\"id\":" + String(id) + ",";
+  json += "\"adc\":" + String(raw) + ",";
+  json += "\"moisture\":" + String(g_readings[idx].moisture);
+  json += "}";
+  sendJSON(200, json);
+}
+
 void handleNotFound() {
   // In AP mode, serve captive portal for any request
   if (g_apMode) {
@@ -325,6 +350,7 @@ void initWebServer() {
   server.on("/config", HTTP_POST, handleConfigPost);
   server.on("/config/sync", HTTP_POST, handleConfigSync);
   server.on("/wifi", HTTP_POST, handleWiFiPost);
+  server.on("/sensor/read", handleSensorRead);
   server.on("/reset", handleReset);
   server.onNotFound(handleNotFound);
 

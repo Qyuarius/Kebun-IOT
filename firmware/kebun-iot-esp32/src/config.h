@@ -6,22 +6,22 @@
 #define DEBUG_SERIAL Serial
 
 // ── DHT22 ──
-#define DHT_PIN 4
+#define DHT_PIN 32
 #define DHT_TYPE DHT22
 
 // ── Max plants ──
 #define MAX_PLANTS 10
-#define DEFAULT_PLANT_COUNT 3
+#define DEFAULT_PLANT_COUNT 1
 
 // ── Default hardware mapping ──
-const uint8_t DEFAULT_SENSOR_PINS[] = {34, 35, 32};
-const uint8_t DEFAULT_PUMP_PINS[] = {26, 27, 25};
-const uint16_t DEFAULT_THRESHOLDS[] = {40, 45, 50};
-const uint16_t DEFAULT_DRY_VALS[] = {3500, 3500, 3500};
-const uint16_t DEFAULT_WET_VALS[] = {1200, 1200, 1200};
-const uint16_t DEFAULT_DURATIONS[] = {5, 5, 5};
-const char* DEFAULT_NAMES[] = {"Daun Bawang", "Kemangi", "Tomat Ceri"};
-const char* DEFAULT_COLORS[] = {"#4ade80", "#fbbf24", "#60a5fa"};
+const uint8_t DEFAULT_SENSOR_PINS[] = {34};
+const uint8_t DEFAULT_PUMP_PINS[] = {25};
+const uint16_t DEFAULT_THRESHOLDS[] = {40};
+const uint16_t DEFAULT_DRY_VALS[] = {3200};
+const uint16_t DEFAULT_WET_VALS[] = {2400};
+const uint16_t DEFAULT_DURATIONS[] = {5};
+const char* DEFAULT_NAMES[] = {"Daun Bawang"};
+const char* DEFAULT_COLORS[] = {"#4ade80"};
 
 // ── Network ──
 #define AP_SSID "Kebun-IoT-AP"
@@ -30,8 +30,9 @@ const char* DEFAULT_COLORS[] = {"#4ade80", "#fbbf24", "#60a5fa"};
 #define DNS_PORT 53
 
 // ── Timing (ms) ──
-#define SENSOR_INTERVAL 5000
+#define SENSOR_INTERVAL 2000
 #define PUMP_CHECK_INTERVAL 500
+#define PUMP_COOLDOWN_MS 60000
 #define CAPTIVE_PORTAL_TIMEOUT 300000
 
 // ── Data structures ──
@@ -51,6 +52,7 @@ struct PlantReading {
   uint16_t moisture;       // 0–100%
   bool pumpActive;
   unsigned long pumpStartMs;
+  unsigned long pumpOffMs;  // last time pump was turned off by timer
 };
 
 // ── Global state (defined in .ino) ──

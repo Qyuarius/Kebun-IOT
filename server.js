@@ -339,6 +339,22 @@ app.put('/api/settings', (req, res) => {
   res.json({ ok: true });
 });
 
+// Read raw ADC from ESP32
+app.get('/api/sensor/adc/:id', async (req, res) => {
+  let espUrl = db.getSetting('esp_url') || 'http://192.168.1.11';
+  if (!espUrl.startsWith('http')) espUrl = 'http://' + espUrl;
+  try {
+    const r = await fetch(`${espUrl}/sensor/read?id=${req.params.id}`, {
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    res.json(data);
+  } catch (e) {
+    res.status(502).json({ error: 'ESP32 unreachable', adc: 0, moisture: 0 });
+  }
+});
+
 // System info
 app.get('/api/system', (req, res) => {
   const uptime = process.uptime();

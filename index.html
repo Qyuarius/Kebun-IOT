@@ -266,7 +266,7 @@
                 <div
                     class="bg-surface-container-low p-4 rounded-xl border border-outline-variant flex flex-col gap-1 hover:border-primary/30 transition-colors">
                     <span class="font-body-sm text-body-sm text-on-surface-variant">Tanaman Aktif</span>
-                    <span id="pill-active" class="font-data-display text-data-display text-on-surface">3</span>
+                    <span id="pill-active" class="font-data-display text-data-display text-on-surface">1</span>
                 </div>
                 <div
                     class="bg-surface-container-low p-4 rounded-xl border border-outline-variant flex flex-col gap-1 hover:border-primary/30 transition-colors">
@@ -286,10 +286,8 @@
             </section>
 
             <!-- Plant Cards -->
-            <section id="plant-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <section id="plant-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-6">
                 <!-- Skeleton placeholders -->
-                <div class="skeleton rounded-xl h-64"></div>
-                <div class="skeleton rounded-xl h-64"></div>
                 <div class="skeleton rounded-xl h-64"></div>
             </section>
         </div>
@@ -412,8 +410,10 @@
                     <h3 class="font-headline-sm text-headline-sm mb-4">Interval Pembacaan</h3>
                     <select id="settings-interval" onchange="EventManager.changeInterval(this.value)"
                         class="w-full bg-surface-container-high border border-outline-variant rounded-lg px-3 py-2 font-data-label text-data-label text-on-surface focus:outline-none focus:border-primary">
+                        <option value="2000" selected>2 detik</option>
+                        <option value="5000">5 detik</option>
                         <option value="10000">10 detik</option>
-                        <option value="30000" selected>30 detik</option>
+                        <option value="30000">30 detik</option>
                         <option value="60000">1 menit</option>
                         <option value="300000">5 menit</option>
                         <option value="600000">10 menit</option>
@@ -646,7 +646,7 @@
             chartInstance: null,
             selectedColor: '#4ade80',
             pendingDeleteId: null,
-            fetchInterval: 30000,
+            fetchInterval: 2000,
         };
 
         // ─────────────────────────────────────────
@@ -1113,11 +1113,24 @@
                 } catch (e) { /* ignore */ }
             },
 
-            readSensorADC(plantId, btn) {
-                const val = 1000 + Math.floor(Math.random() * 3000);
+            async readSensorADC(plantId, btn) {
                 const orig = btn.textContent;
-                btn.textContent = `ADC: ${val}`;
-                setTimeout(() => btn.textContent = orig, 3000);
+                btn.textContent = 'Reading...';
+                btn.disabled = true;
+                try {
+                    const data = await API.get(`/api/sensor/adc/${plantId}`);
+                    btn.textContent = `ADC: ${data.adc}`;
+                    setTimeout(() => {
+                        btn.textContent = orig;
+                        btn.disabled = false;
+                    }, 5000);
+                } catch (e) {
+                    btn.textContent = 'Error';
+                    setTimeout(() => {
+                        btn.textContent = orig;
+                        btn.disabled = false;
+                    }, 3000);
+                }
             },
 
             async changeInterval(val) {

@@ -6,9 +6,9 @@ Greenhouse monitoring & automation system berbasis ESP32, Node.js, dan SQLite.
 
 ```
 ┌─────────────────┐     HTTP/WS      ┌──────────────┐     HTTP     ┌──────────┐
-│  Dashboard Web  │ ←──────────────→ │ Node.js       │ ←──────────→ │  ESP32   │
-│  (index.html)   │   localhost:3000 │ Backend +     │  192.168.x.x │ Firmware │
-│  Tailwind+Chart │                  │ SQLite        │              │ Arduino  │
+│  Dashboard Web  │ ←──────────────→ │ Node.js      │ ←──────────→ │  ESP32   │
+│  (index.html)   │   localhost:3000 │ Backend +    │  192.168.x.x │ Firmware │
+│  Tailwind+Chart │                  │ SQLite       │              │ Arduino  │
 └─────────────────┘                  └──────────────┘              └──────────┘
 ```
 
@@ -16,13 +16,9 @@ Greenhouse monitoring & automation system berbasis ESP32, Node.js, dan SQLite.
 
 | Komponen | Pin GPIO |
 |---|---|
-| DHT22 suhu & kelembaban | 4 |
-| Soil moisture sensor 1 | 34 (ADC) |
-| Soil moisture sensor 2 | 35 (ADC) |
-| Soil moisture sensor 3 | 32 (ADC) |
-| Relay pompa 1 | 26 |
-| Relay pompa 2 | 27 |
-| Relay pompa 3 | 25 |
+| DHT22 suhu & kelembaban | 32 |
+| Soil moisture sensor | 34 (ADC) |
+| Relay pompa | 25 |
 
 ## Cara Menjalankan
 
@@ -70,20 +66,20 @@ Buka `http://localhost:3000` di browser.
 
 ## API Endpoints
 
-| Method | Endpoint | Deskripsi |
-|---|---|---|
-| GET | `/api/data` | Data terbaru semua tanaman |
-| GET | `/api/data/history?range=30min` | Riwayat sensor |
-| GET | `/api/plants` | Daftar tanaman |
-| POST | `/api/plants` | Tambah tanaman |
-| PUT | `/api/plants/:id` | Update tanaman |
-| DELETE | `/api/plants/:id` | Hapus tanaman |
-| POST | `/api/pump/:id` | Toggle pompa `{state: bool}` |
-| GET | `/api/logs?filter=&page=` | Log events |
-| GET | `/api/export/csv` | Export CSV |
-| GET | `/api/settings` | Pengaturan |
-| PUT | `/api/settings` | Simpan pengaturan |
-| GET | `/api/system` | Info sistem |
+| Method |             Endpoint            |          Deskripsi           |
+|--------|---------------------------------|------------------------------|
+| GET    | `/api/data`                     | Data terbaru semua tanaman   |
+| GET    | `/api/data/history?range=30min` | Riwayat sensor               |
+| GET    | `/api/plants`                   | Daftar tanaman               |
+| POST   | `/api/plants`                   | Tambah tanaman               |
+| PUT    | `/api/plants/:id`               | Update tanaman               |
+| DELETE | `/api/plants/:id`               | Hapus tanaman                |
+| POST   | `/api/pump/:id`                 | Toggle pompa `{state: bool}` |
+| GET    | `/api/logs?filter=&page=`       | Log events                   |
+| GET    | `/api/export/csv`               | Export CSV                   |
+| GET    | `/api/settings`                 | Pengaturan                   |
+| PUT    | `/api/settings`                 | Simpan pengaturan            |
+| GET    | `/api/system`                   | Info sistem                  |
 
 ## Memulai Ulang (setelah mati)
 

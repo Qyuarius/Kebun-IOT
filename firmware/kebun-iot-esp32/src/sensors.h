@@ -38,6 +38,15 @@ void readSoilMoisture(int idx) {
 void readAllSensors() {
   for (int i = 0; i < g_plantCount; i++) {
     readSoilMoisture(i);
+    DEBUG_SERIAL.print("[SENSOR] Plant ");
+    DEBUG_SERIAL.print(g_plants[i].id);
+    DEBUG_SERIAL.print(" (");
+    DEBUG_SERIAL.print(g_plants[i].name);
+    DEBUG_SERIAL.print(") | ADC: ");
+    DEBUG_SERIAL.print(analogRead(g_plants[i].sensorPin));
+    DEBUG_SERIAL.print(" | Moisture: ");
+    DEBUG_SERIAL.print(g_readings[i].moisture);
+    DEBUG_SERIAL.println("%");
   }
 }
 
