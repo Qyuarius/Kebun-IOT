@@ -85,8 +85,8 @@ function seedDefaults() {
   const tx = db.transaction(() => {
     insertPlant.run('Daun Bawang', 34, 25, 40, '#4ade80', 5, 3200, 2400);
 
-    insertSettings.run('esp_url', 'http://192.168.1.11');
-    insertSettings.run('fetch_interval', '2000');
+    insertSettings.run('esp_url', 'http://192.168.4.1');
+    insertSettings.run('fetch_interval', '30000');
     insertSettings.run('wifi_mode', 'ap');
     insertSettings.run('next_plant_id', '2');
   });

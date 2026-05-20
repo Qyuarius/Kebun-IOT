@@ -97,3 +97,8 @@ Buka `http://localhost:3000` di browser.
 - Untuk IP tetap, set DHCP reservation di router
 - Maksimal 10 tanaman per ESP32
 - Database: SQLite (`data/kebun.db`)
+
+$ pio run --target uploadfs
+$ timeout 15 pio device monitor --baud 115200 --raw 2>&1 || true
+
+Kalau mau ganti IP static di masa depan, edit STATIC_IP di firmware/kebun-iot-esp32/src/config.h:32.

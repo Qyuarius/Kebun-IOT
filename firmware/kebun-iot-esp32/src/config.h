@@ -29,6 +29,14 @@ const char* DEFAULT_COLORS[] = {"#4ade80"};
 #define HTTP_PORT 80
 #define DNS_PORT 53
 
+// ── Static IP (set sesuai jaringan kamu) ──
+#define USE_STATIC_IP true
+IPAddress STATIC_IP(192, 168, 1, 11);
+IPAddress GATEWAY(192, 168, 1, 1);
+IPAddress SUBNET(255, 255, 255, 0);
+IPAddress DNS1(192, 168, 1, 1);
+IPAddress DNS2(8, 8, 8, 8);
+
 // ── Timing (ms) ──
 #define SENSOR_INTERVAL 2000
 #define PUMP_CHECK_INTERVAL 500

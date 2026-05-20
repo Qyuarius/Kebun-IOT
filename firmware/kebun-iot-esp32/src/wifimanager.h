@@ -121,6 +121,11 @@ bool connectSTA(const char* ssid, const char* pass) {
   DEBUG_SERIAL.println(ssid);
 
   WiFi.mode(WIFI_STA);
+
+#if USE_STATIC_IP
+  WiFi.config(STATIC_IP, GATEWAY, SUBNET, DNS1, DNS2);
+#endif
+
   WiFi.begin(ssid, pass);
 
   int attempts = 0;

@@ -341,7 +341,7 @@ app.put('/api/settings', (req, res) => {
 
 // Read raw ADC from ESP32
 app.get('/api/sensor/adc/:id', async (req, res) => {
-  let espUrl = db.getSetting('esp_url') || 'http://192.168.1.11';
+  let espUrl = db.getSetting('esp_url') || 'http://192.168.4.1';
   if (!espUrl.startsWith('http')) espUrl = 'http://' + espUrl;
   try {
     const r = await fetch(`${espUrl}/sensor/read?id=${req.params.id}`, {
