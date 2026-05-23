@@ -6,7 +6,7 @@
 #define DEBUG_SERIAL Serial
 
 // ── DHT22 ──
-#define DHT_PIN 32
+#define DHT_PIN 21
 #define DHT_TYPE DHT22
 
 // ── Max plants ──
@@ -14,8 +14,9 @@
 #define DEFAULT_PLANT_COUNT 1
 
 // ── Default hardware mapping ──
+// Sensor: GPIO 34 (soil moisture), Pump: GPIO 26 (relay), DHT22: GPIO 21
 const uint8_t DEFAULT_SENSOR_PINS[] = {34};
-const uint8_t DEFAULT_PUMP_PINS[] = {25};
+const uint8_t DEFAULT_PUMP_PINS[] = {26};
 const uint16_t DEFAULT_THRESHOLDS[] = {40};
 const uint16_t DEFAULT_DRY_VALS[] = {3200};
 const uint16_t DEFAULT_WET_VALS[] = {2400};
@@ -42,6 +43,7 @@ IPAddress DNS2(8, 8, 8, 8);
 #define PUMP_CHECK_INTERVAL 500
 #define PUMP_COOLDOWN_MS 60000
 #define CAPTIVE_PORTAL_TIMEOUT 300000
+#define MANUAL_OVERRIDE_MS 300000   // 5 menit override auto-watering saat pump dimatikan manual
 
 // ── Data structures ──
 struct PlantConfig {
@@ -60,7 +62,8 @@ struct PlantReading {
   uint16_t moisture;       // 0–100%
   bool pumpActive;
   unsigned long pumpStartMs;
-  unsigned long pumpOffMs;  // last time pump was turned off by timer
+  unsigned long pumpOffMs;   // last time pump was turned off by timer
+  unsigned long manualOverrideUntil;  // 0 = no override, > now = skip auto-watering
 };
 
 // ── Global state (defined in .ino) ──

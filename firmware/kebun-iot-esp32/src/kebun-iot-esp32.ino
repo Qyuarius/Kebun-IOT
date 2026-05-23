@@ -77,15 +77,8 @@ void loop() {
   }
 
   // ── Check pump auto-off timers ──
-  if (now - lastSensorRead < PUMP_CHECK_INTERVAL) {
-    // Check more frequently when pumps might be active
-    checkPumpTimers();
-  }
-  static unsigned long lastPumpCheck = 0;
-  if (now - lastPumpCheck >= PUMP_CHECK_INTERVAL) {
-    lastPumpCheck = now;
-    checkPumpTimers();
-  }
+  // FIX: Check pump timers every loop iteration to ensure pumps turn off on time
+  checkPumpTimers();
 
   // ── Print status ──
   if (now - lastSerialPrint >= SERIAL_INTERVAL) {

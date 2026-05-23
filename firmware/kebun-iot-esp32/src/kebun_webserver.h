@@ -102,6 +102,10 @@ void handlePump() {
 
   setPump(idx, state);
 
+  if (!state) {
+    g_readings[idx].manualOverrideUntil = millis() + MANUAL_OVERRIDE_MS;
+  }
+
   String json = "{\"ok\":true,\"id\":" + String(id) + ",\"state\":" + String(state ? "true" : "false") + "}";
   sendJSON(200, json);
 }
