@@ -32,7 +32,7 @@ pio run --target uploadfs     # Upload captive portal ke LittleFS
 
 ### 2. ESP32 — Konfigurasi WiFi
 
-- Nyalakan ESP32 → otomatis AP mode `Kebun-IoT-AP` (password: `12345678`)
+- Nyalakan ESP32 → otomatis AP mode `Kebun-IoT-AP` 
 - Connect dari HP/laptop ke AP tersebut
 - Buka `http://192.168.4.1`
 - Masukkan SSID & password WiFi rumah → ESP32 restart, connect ke WiFi
